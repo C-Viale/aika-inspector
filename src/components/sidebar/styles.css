@@ -1,0 +1,42 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 350px;
+  top: 0;
+  left: 0;
+  background-color: #cccccc;
+  overflow: hidden;
+  height: 100vh;
+  gap: 0.5rem;
+  padding: 8px;
+
+  > header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filelist {
+    list-style: none;
+    flex-grow: 1;
+    padding: 0;
+    height: 100%;
+    border: 1px solid #767575;
+    border-radius: 4px;
+
+    > li {
+      padding: 0.2rem 1rem;
+      border-bottom: 1px solid #767575;
+      cursor: pointer;
+
+      &[data-selected="true"] {
+        background-color: rgb(131, 151, 189);
+      }
+
+      &:hover {
+        background-color: rgb(172, 172, 172);
+      }
+    }
+    overflow-y: auto;
+  }
+}

@@ -1,0 +1,16 @@
+.button {
+  background-color: white;
+  color: black;
+  height: 32px;
+  padding: 0 1rem;
+  border: 1px solid #767575;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: rgb(178, 178, 178);
+  }
+
+  &:not(:disabled) {
+    cursor: pointer;
+  }
+}

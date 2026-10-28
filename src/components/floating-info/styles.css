@@ -1,0 +1,7 @@
+.floating-info {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #cccccc;
+  padding: 8px;
+}
