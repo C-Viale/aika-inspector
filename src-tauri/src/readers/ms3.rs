@@ -1,12 +1,8 @@
-use byteorder::{LittleEndian, ReadBytesExt};
-use std::{
-  fs::File,
-  io::{BufReader, Read},
-};
+use std::fs::File;
 
 use crate::{
   models::ms3::Ms3Data,
-  structs::{Vec2, Vec3},
+  structs::{ByteReader, Vec2, Vec3},
 };
 
 /*
@@ -50,17 +46,17 @@ use crate::{
   TODO: map remaining bytes
 */
 
-pub async fn read_ms3(file: &File) -> Result<Ms3Data, std::io::Error> {
-  let mut reader = BufReader::new(file);
+pub async fn read(file: &File) -> Result<Ms3Data, &'static str> {
+  let mut reader = ByteReader::new(file);
 
-  let magic = reader.read_i32::<LittleEndian>()?;
-  let unknow_1 = reader.read_i32::<LittleEndian>()?;
-  let unknow_2 = reader.read_i32::<LittleEndian>()?;
-  let has_lightmap = reader.read_i32::<LittleEndian>()?;
-  let unknow_3 = reader.read_i32::<LittleEndian>()?;
-  let unknow_4 = reader.read_i32::<LittleEndian>()?;
-  let unknow_5 = reader.read_i32::<LittleEndian>()?;
-  let texture_count = reader.read_i32::<LittleEndian>()?;
+  let magic = reader.read_i32_le()?;
+  let unknow_1 = reader.read_i32_le()?;
+  let unknow_2 = reader.read_i32_le()?;
+  let has_lightmap = reader.read_i32_le()?;
+  let unknow_3 = reader.read_i32_le()?;
+  let unknow_4 = reader.read_i32_le()?;
+  let unknow_5 = reader.read_i32_le()?;
+  let texture_count = reader.read_i32_le()?;
 
   let mut lightmap_texture_name = String::new();
   let mut texture_names: Vec<String> = vec![];
@@ -73,8 +69,7 @@ pub async fn read_ms3(file: &File) -> Result<Ms3Data, std::io::Error> {
     lightmap_texture_name.push_str(texture_name);
   }
 
-  let mut i = 0;
-  while i < texture_count {
+  for _ in 0..texture_count {
     let mut buffer = [0u8; 50];
     reader.read_exact(&mut buffer)?;
 
@@ -82,22 +77,20 @@ pub async fn read_ms3(file: &File) -> Result<Ms3Data, std::io::Error> {
 
     let texture_name = str::from_utf8(&buffer[..end]).expect("msg");
     texture_names.push(texture_name.to_owned());
-    i += 1;
   }
 
-  reader.read_u16::<LittleEndian>()?; // 2 byte padding
+  reader.read_u16_le()?; // 2 byte padding
 
-  let first_count = reader.read_i32::<LittleEndian>()?;
-  let vertex_count = reader.read_i32::<LittleEndian>()?;
-  let triangle_count = reader.read_i32::<LittleEndian>()?;
+  let first_count = reader.read_i32_le()?;
+  let vertex_count = reader.read_i32_le()?;
+  let triangle_count = reader.read_i32_le()?;
 
-  let unknow_pad_1 = reader.read_i32::<LittleEndian>()?;
-  let unknow_pad_2 = reader.read_i32::<LittleEndian>()?;
-  let unknow_pad_3 = reader.read_i32::<LittleEndian>()?;
-  let unknow_pad_4 = reader.read_i32::<LittleEndian>()?;
-  let unknow_pad_5 = reader.read_i32::<LittleEndian>()?;
+  let unknow_pad_1 = reader.read_i32_le()?;
+  let unknow_pad_2 = reader.read_i32_le()?;
+  let unknow_pad_3 = reader.read_i32_le()?;
+  let unknow_pad_4 = reader.read_i32_le()?;
+  let unknow_pad_5 = reader.read_i32_le()?;
 
-  // let mut vertices: Vec<Vec3> = Vec::with_capacity(vertex_count.try_into().unwrap());
   let mut vertices: Vec<Vec3> = Vec::new();
   let mut normals: Vec<Vec3> = Vec::new();
   let mut uv: Vec<Vec2> = Vec::new();
@@ -105,94 +98,79 @@ pub async fn read_ms3(file: &File) -> Result<Ms3Data, std::io::Error> {
 
   // condition is not entirely correct, need more info
   if has_lightmap == 0 {
-    let mut i = 0;
-    while i < vertex_count {
+    for _ in 0..vertex_count {
       vertices.push(Vec3 {
-        x: reader.read_f32::<LittleEndian>()?,
-        y: reader.read_f32::<LittleEndian>()?,
-        z: reader.read_f32::<LittleEndian>()?,
+        x: reader.read_f32_le()?,
+        y: reader.read_f32_le()?,
+        z: reader.read_f32_le()?,
       });
       normals.push(Vec3 {
-        x: reader.read_f32::<LittleEndian>()?,
-        y: reader.read_f32::<LittleEndian>()?,
-        z: reader.read_f32::<LittleEndian>()?,
+        x: reader.read_f32_le()?,
+        y: reader.read_f32_le()?,
+        z: reader.read_f32_le()?,
       });
-
-      i += 1;
     }
 
-    let mut i = 0;
-    while i < vertex_count {
+    for _ in 0..vertex_count {
       uv.push(Vec2 {
-        x: reader.read_f32::<LittleEndian>()?,
-        y: reader.read_f32::<LittleEndian>()?,
+        x: reader.read_f32_le()?,
+        y: reader.read_f32_le()?,
       });
-      i += 1;
     }
 
-    let mut i = 0;
-    while i < triangle_count {
+    for _ in 0..triangle_count {
       triangles.push(Vec3 {
-        x: reader.read_i16::<LittleEndian>()?,
-        y: reader.read_i16::<LittleEndian>()?,
-        z: reader.read_i16::<LittleEndian>()?,
+        x: reader.read_i16_le()?,
+        y: reader.read_i16_le()?,
+        z: reader.read_i16_le()?,
       });
-      i += 1;
     }
   } else {
     let mut shared_posiitions: Vec<Vec3> = Vec::new();
 
-    let mut i = 0;
-    while i < first_count {
+    for _ in 0..first_count {
       shared_posiitions.push(Vec3 {
-        x: reader.read_f32::<LittleEndian>()?,
-        y: reader.read_f32::<LittleEndian>()?,
-        z: reader.read_f32::<LittleEndian>()?,
+        x: reader.read_f32_le()?,
+        y: reader.read_f32_le()?,
+        z: reader.read_f32_le()?,
       });
-      i += 1
     }
 
-    let mut i = 0;
-    while i < vertex_count {
-      let position = reader.read_i32::<LittleEndian>()?;
+    for _ in 0..vertex_count {
+      let position = reader.read_i32_le()?;
 
       let position: usize = position.try_into().unwrap();
 
       let pos = &shared_posiitions[position];
 
-      // reader.read_i32::<LittleEndian>()?;
+      // reader.read_i32_le()?;
 
       vertices.push(pos.clone());
 
       // uv.push(Vec2 {
-      //     x: reader.read_f32::<LittleEndian>()?,
-      //     y: reader.read_f32::<LittleEndian>()?,
+      //     x: reader.read_f32_le()?,
+      //     y: reader.read_f32_le()?,
       // });
 
-      reader.read_f32::<LittleEndian>()?;
-      reader.read_f32::<LittleEndian>()?;
+      reader.read_f32_le()?;
+      reader.read_f32_le()?;
 
       // uv.push(Vec2 {
-      //     x: reader.read_f32::<LittleEndian>()?,
-      //     y: reader.read_f32::<LittleEndian>()?,
+      //     x: reader.read_f32_le()?,
+      //     y: reader.read_f32_le()?,
       // });
 
-      reader.read_f32::<LittleEndian>()?;
-      reader.read_f32::<LittleEndian>()?;
-      i += 1
+      reader.read_f32_le()?;
+      reader.read_f32_le()?;
     }
 
-    let mut i = 0;
-    while i < triangle_count {
+    for _ in 0..triangle_count {
       triangles.push(Vec3 {
-        x: reader.read_i16::<LittleEndian>()?,
-        y: reader.read_i16::<LittleEndian>()?,
-        z: reader.read_i16::<LittleEndian>()?,
+        x: reader.read_i16_le()?,
+        y: reader.read_i16_le()?,
+        z: reader.read_i16_le()?,
       });
-      i += 1;
     }
-
-    // todo!()
   }
 
   Ok(Ms3Data {

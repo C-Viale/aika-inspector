@@ -1,7 +1,7 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  width: 350px;
+  min-width: 400px;
   top: 0;
   left: 0;
   background-color: #cccccc;
@@ -17,26 +17,37 @@
   }
 
   .filelist {
-    list-style: none;
+    padding: 0.5rem;
     flex-grow: 1;
-    padding: 0;
     height: 100%;
     border: 1px solid #767575;
     border-radius: 4px;
+    overflow: auto;
 
-    > li {
-      padding: 0.2rem 1rem;
-      border-bottom: 1px solid #767575;
+    .filelist-folder-label {
+      display: flex;
+      gap: 0.2rem;
+      white-space: nowrap;
+    }
+
+    .filelist-folder-children {
+      padding: 0 0 0 18px;
+    }
+
+    .filelist-folder {
       cursor: pointer;
+    }
 
-      &[data-selected="true"] {
-        background-color: rgb(131, 151, 189);
-      }
+    .filelist-file {
+      margin: 0 0 0 18px;
+      white-space: nowrap;
 
       &:hover {
         background-color: rgb(172, 172, 172);
       }
+      &[data-selected="true"] {
+        background-color: rgb(131, 151, 189);
+      }
     }
-    overflow-y: auto;
   }
 }

@@ -1,0 +1,23 @@
+.texture-viewer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bg-select {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #cccccc;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.bg-select-item {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}

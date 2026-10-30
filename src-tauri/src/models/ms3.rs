@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  models::responses::ModelData,
+  models::responses::MeshData,
   structs::{Vec2, Vec3},
 };
 
@@ -30,9 +30,9 @@ pub struct Ms3Data {
   pub uv: Vec<Vec2>,
 }
 
-impl Into<ModelData> for Ms3Data {
-  fn into(self) -> ModelData {
-    ModelData {
+impl Into<MeshData> for Ms3Data {
+  fn into(self) -> MeshData {
+    MeshData {
       vertices: self.vertices,
       triangles: self.triangles,
       normals: self.normals,

@@ -1,13 +1,22 @@
 import { invoke } from "@tauri-apps/api/core";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { useMemo, useState } from "react";
 import * as THREE from "three";
-import { FloatingInfo } from "./components/floating-info";
-import { Sidebar } from "./components/sidebar";
-import { ModelData } from "./types";
-import { Viewer } from "./viewer";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
-import { save } from "@tauri-apps/plugin-dialog";
+import {
+  FolderData,
+  getFolderStructure,
+  readMesh,
+  readTexture,
+  TextureData,
+} from "./actions/files";
+import { MeshViewer } from "./components/mesh-viewer";
+import { Sidebar } from "./components/sidebar";
+import { TextureViewer } from "./components/texture-viewer";
+import { ALLOWED_FILES } from "./constants";
+import { AppContext } from "./contexts/app-context";
+import { ModelData } from "./types";
 
 type ModelExporter = {
   id: string;
@@ -38,33 +47,69 @@ const objExporter: ModelExporter = {
 const EXPORTERS: ModelExporter[] = [glbExporter, objExporter];
 
 export default function App() {
-  const [selectedPath, setSelectedPath] = useState("");
-  const [loaded, setLoaded] = useState<ModelData | null>();
+  const [backgroundColor, setBackgroundColor] = useState("black");
+  const [folder, setFolder] = useState<FolderData | null>(null);
+  const [selectedFilePath, setSelectedFilePath] = useState("");
+  const [error, setError] = useState("");
+
+  const [loadedMesh, setLoadedMesh] = useState<ModelData | null>();
+  const [loadedTexture, setLoadedTexture] = useState<TextureData | null>(null);
 
   const model: THREE.Object3D | null = useMemo(() => {
-    if (!loaded) return null;
-    return modelDataToThreeObject(loaded);
-  }, [loaded]);
+    if (!loadedMesh) return null;
+    return modelDataToThreeObject(loadedMesh);
+  }, [loadedMesh]);
 
-  const reload = () => {
-    load(selectedPath);
+  const loadMesh = async (path: string) => {
+    const response = await readMesh(path);
+
+    disposeMesh();
+    disposeTexture();
+    setSelectedFilePath(path);
+
+    if ("data" in response) {
+      setLoadedMesh(response.data);
+      setError("");
+    } else {
+      setError(response.error);
+    }
+  };
+
+  const loadTexture = async (path: string) => {
+    const response = await readTexture(path);
+
+    disposeMesh();
+    disposeTexture();
+    setSelectedFilePath(path);
+
+    if ("data" in response) {
+      setLoadedTexture(response.data);
+      setError("");
+    } else {
+      setError(response.error);
+    }
+  };
+
+  const disposeTexture = () => {
+    if (!loadedTexture) return;
+    URL.revokeObjectURL(loadedTexture.src);
+    setLoadedTexture(null);
+  };
+
+  const disposeMesh = () => {
+    if (!model) return;
+    disposeThreeObject(model);
+    setLoadedMesh(null);
   };
 
   const load = async (path: string) => {
     if (!path) return;
 
-    if (model) {
-      disposeThreeObject(model);
-      setLoaded(null);
-    }
+    const extension = path.split(".").at(-1);
+    const type = ALLOWED_FILES[extension as any];
 
-    try {
-      const buffer = await invoke<ModelData>("read_file", { path });
-      setLoaded(buffer);
-      setSelectedPath(path);
-    } catch {
-      console.log("error");
-    }
+    if (type == "mesh") loadMesh(path);
+    if (type === "texture") loadTexture(path);
   };
 
   const exportModel = async (exporterId: string) => {
@@ -72,7 +117,7 @@ export default function App() {
 
     const exporter = EXPORTERS.find((x) => x.id === exporterId)!;
     const path = await save({
-      defaultPath: selectedPath,
+      defaultPath: selectedFilePath,
       filters: [{ name: exporter.label, extensions: [exporter.extension] }],
     });
     if (!path) return;
@@ -91,16 +136,63 @@ export default function App() {
     }
   };
 
+  const openFolderDialog = async () => {
+    const folderPath = await open({
+      directory: true,
+      multiple: false,
+    });
+
+    if (!folderPath) return;
+
+    const response = await getFolderStructure(folderPath);
+
+    if ("data" in response) {
+      setFolder(response.data);
+      setError("");
+    } else {
+      setError(response.error);
+    }
+  };
+
   return (
-    <div className="app-layout">
-      <Sidebar
-        selectedPath={selectedPath}
-        onPathSelected={load}
-        onExportClick={exportModel}
-      />
-      <Viewer modelKey={selectedPath} model={model} />
-      {loaded && <FloatingInfo data={loaded} />}
-    </div>
+    <AppContext
+      value={{ selectedFilePath, folder, backgroundColor, setBackgroundColor }}
+    >
+      <div className="app-layout">
+        <Sidebar
+          folder={folder}
+          selectedFilePath={selectedFilePath}
+          onPathSelected={load}
+          onExportClick={exportModel}
+          onOpenFolderClick={openFolderDialog}
+        />
+        <div className="viewport" style={{ backgroundColor }}>
+          {loadedMesh && (
+            <MeshViewer
+              data={loadedMesh}
+              modelKey={selectedFilePath}
+              model={model}
+            />
+          )}
+          {loadedTexture && <TextureViewer data={loadedTexture} />}
+          {error && (
+            <div
+              style={{
+                color: "white",
+                padding: ".5rem",
+                backgroundColor: "#750c0c",
+                position: "absolute",
+                bottom: 0,
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              {error}
+            </div>
+          )}
+        </div>
+      </div>
+    </AppContext>
   );
 }
 
