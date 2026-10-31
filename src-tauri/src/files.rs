@@ -3,7 +3,7 @@ use std::{
   path::{Path, PathBuf},
 };
 
-use crate::models::responses::FolderData;
+use crate::responses::FolderData;
 
 pub fn list_directory_children(root_path: &Path) -> Result<FolderData, &'static str> {
   let Ok(dir) = fs::read_dir(root_path) else {

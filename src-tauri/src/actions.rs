@@ -1,7 +1,7 @@
 use crate::{
   files::list_directory_children,
-  models::responses::{FolderData, MeshData, TextureData},
-  readers,
+  parsers,
+  responses::{FolderData, MeshData, TextureData},
 };
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::Path};
@@ -47,7 +47,7 @@ pub async fn read_mesh(path: &str) -> Result<MeshData, ActionError> {
   };
 
   if extension == "msh" {
-    let msh = readers::msh::read(&file).await;
+    let msh = parsers::msh::read(&file).await;
 
     match msh {
       Ok(data) => return_ok!(data),
@@ -56,7 +56,7 @@ pub async fn read_mesh(path: &str) -> Result<MeshData, ActionError> {
   }
 
   if extension == "ms3" || extension == "MS3" {
-    let ms3 = readers::ms3::read(&file).await;
+    let ms3 = parsers::ms3::read(&file).await;
 
     match ms3 {
       Ok(data) => return_ok!(data),
@@ -78,7 +78,7 @@ pub async fn read_texture(path: &str) -> Result<TextureData, ActionError> {
   };
 
   if extension == "jit" {
-    let jit = readers::jit::read(&file).await;
+    let jit = parsers::jit::read(&file).await;
     match jit {
       Ok(data) => return_ok!(data),
       Err(msg) => return_err!(msg),

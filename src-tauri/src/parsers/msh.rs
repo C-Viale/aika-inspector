@@ -2,9 +2,48 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use std::{fs::File, io::BufReader};
 
 use crate::{
-  models::msh::MshData,
+  responses::MeshData,
   structs::{Vec2, Vec3},
 };
+
+pub struct MshData {
+  pub magic: i32,
+  pub unused_0: i32,
+  pub chunk_key: i32,
+  pub unknow_0: i32,
+  pub chunk_size: i32,
+  pub unknow_1: i32,
+  pub bone_count: u32,
+  pub vertices_count: u32,
+  pub triangles_position_count: u32,
+
+  pub vertices: Vec<Vec3>,
+  pub triangles: Vec<Vec3<i16>>,
+  pub normals: Vec<Vec3>,
+  pub uv: Vec<Vec2>,
+}
+
+impl Into<MeshData> for MshData {
+  fn into(self) -> MeshData {
+    MeshData {
+      vertices: self.vertices,
+      triangles: self.triangles,
+      normals: self.normals,
+      uv: self.uv,
+    }
+  }
+}
+
+pub struct MshBone {
+  pub id: i32,
+  pub transform: Vec<f32>,
+}
+
+pub struct MshBoneWeight {
+  pub bone_count: i32,
+  pub bones_ids: [i8; 4],
+  pub weights: [f32; 4],
+}
 
 pub async fn read(file: &File) -> Result<MshData, std::io::Error> {
   let mut reader = BufReader::new(file);

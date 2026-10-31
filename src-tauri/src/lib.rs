@@ -1,7 +1,7 @@
-pub mod actions;
+pub(crate) mod actions;
 pub(crate) mod files;
-pub(crate) mod models;
-pub(crate) mod readers;
+pub(crate) mod parsers;
+pub(crate) mod responses;
 pub(crate) mod structs;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
