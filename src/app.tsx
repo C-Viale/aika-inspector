@@ -52,6 +52,8 @@ export default function App() {
   const [selectedFilePath, setSelectedFilePath] = useState("");
   const [error, setError] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const [loadedMesh, setLoadedMesh] = useState<ModelData | null>();
   const [loadedTexture, setLoadedTexture] = useState<TextureData | null>(null);
 
@@ -108,8 +110,10 @@ export default function App() {
     const extension = path.split(".").at(-1);
     const type = ALLOWED_FILES[extension as any];
 
-    if (type == "mesh") loadMesh(path);
-    if (type === "texture") loadTexture(path);
+    setLoading(true);
+    if (type == "mesh") await loadMesh(path);
+    if (type === "texture") await loadTexture(path);
+    setLoading(false);
   };
 
   const exportModel = async (exporterId: string) => {
@@ -190,7 +194,33 @@ export default function App() {
               {error}
             </div>
           )}
+
+          <div className="settings-bg-select">
+            <div
+              className="settings-bg-select-item"
+              style={{ backgroundColor: "black" }}
+              onClick={() => {
+                console.log("uai");
+                setBackgroundColor("black");
+              }}
+            ></div>
+            <div
+              className="settings-bg-select-item"
+              style={{ backgroundColor: "grey" }}
+              onClick={() => setBackgroundColor("grey")}
+            ></div>
+            <div
+              className="settings-bg-select-item"
+              style={{ backgroundColor: "white" }}
+              onClick={() => setBackgroundColor("white")}
+            ></div>
+          </div>
         </div>
+        {loading && (
+          <div className="loading-container">
+            <div>Loading file...</div>
+          </div>
+        )}
       </div>
     </AppContext>
   );

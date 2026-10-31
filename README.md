@@ -1,7 +1,14 @@
-# Tauri + React + Typescript
+# AIKA Inspector
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+A tool to open and convert files from the korean MMORPG AIKA Online.
 
-## Recommended IDE Setup
+#### Supported extensions:
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- .msh
+- .MS3
+- .jit
+
+#### Supported mesh export formats:
+
+- .stl
+- .obj

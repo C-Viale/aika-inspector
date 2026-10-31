@@ -4,20 +4,16 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
+  scrollbar-width: 0;
+  user-select: none;
 }
 
-.bg-select {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: #cccccc;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-}
-
-.bg-select-item {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
+img.texture {
+  transform-origin: 0 0;
+  display: block;
+  max-width: 600px;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }

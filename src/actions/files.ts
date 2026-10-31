@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { Response } from "./types";
 import { ModelData } from "../types";
+import { sortFolder } from "../utils/functions";
 
 export type FolderData = {
   name: string;
@@ -32,6 +33,9 @@ export async function getFolderStructure(
     const data = await invoke<FolderData>("get_folder_structure", {
       path,
     });
+
+    sortFolder(data, "asc");
+
     return { data };
   } catch (error) {
     return parseError(error);
@@ -79,4 +83,11 @@ function parseError(err: unknown): { error: string } {
   }
 
   return { error: "unknown error" };
+}
+
+const sort = (a: string, b: string) => a.localeCompare(b);
+
+function s(a: FolderData) {
+  a.files.sort(sort);
+  a.subfolders.forEach(s);
 }
