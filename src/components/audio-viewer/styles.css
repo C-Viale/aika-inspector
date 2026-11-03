@@ -1,0 +1,9 @@
+.audio-viewer {
+  display: grid;
+  width: 100%;
+  place-items: center;
+
+  > audio {
+    width: 400px;
+  }
+}

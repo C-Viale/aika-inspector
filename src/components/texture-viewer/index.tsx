@@ -1,6 +1,6 @@
+import { TextureData } from "#actions/files";
+import { FloatingInfo } from "#components/floating-info";
 import { PointerEvent, useEffect, useRef, useState } from "react";
-import { TextureData } from "../../actions/files";
-import { FloatingInfo } from "../floating-info";
 import "./styles.css";
 
 interface TextureViewerProps {

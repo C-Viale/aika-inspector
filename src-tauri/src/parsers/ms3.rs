@@ -5,6 +5,7 @@ use crate::{
   structs::{ByteReader, Vec2, Vec3},
 };
 
+#[allow(dead_code)]
 pub struct Ms3Data {
   pub magic: i32,
   pub unknow_1: i32,
@@ -36,6 +37,8 @@ impl Into<MeshData> for Ms3Data {
       triangles: self.triangles,
       normals: self.normals,
       uv: self.uv,
+      bones: vec![],
+      bone_weights: vec![],
     }
   }
 }
@@ -174,7 +177,7 @@ pub async fn read(file: &File) -> Result<Ms3Data, &'static str> {
     for _ in 0..vertex_count {
       let position = reader.read_i32_le()?;
 
-      let position: usize = position.try_into().unwrap();
+      let position = position as usize;
 
       let pos = &shared_posiitions[position];
 

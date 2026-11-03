@@ -1,10 +1,13 @@
 use crate::{
   files::list_directory_children,
   parsers,
-  responses::{FolderData, MeshData, TextureData},
+  responses::{AudioData, FolderData, ReadFileResponse},
 };
 use serde::{Deserialize, Serialize};
-use std::{fs::File, path::Path};
+use std::{
+  fs::{self, File},
+  path::Path,
+};
 use tauri::ipc::{InvokeBody, Request};
 
 macro_rules! return_err {
@@ -37,7 +40,7 @@ pub async fn get_folder_structure(path: &str) -> Result<FolderData, ActionError>
 }
 
 #[tauri::command]
-pub async fn read_mesh(path: &str) -> Result<MeshData, ActionError> {
+pub async fn read_file(path: &str) -> Result<ReadFileResponse, ActionError> {
   let Some(extension) = Path::new(&path).extension() else {
     return_err!("Unable to open file");
   };
@@ -50,7 +53,7 @@ pub async fn read_mesh(path: &str) -> Result<MeshData, ActionError> {
     let msh = parsers::msh::read(&file).await;
 
     match msh {
-      Ok(data) => return_ok!(data),
+      Ok(data) => return_ok!(ReadFileResponse::Mesh(data.into())),
       Err(msg) => return_err!(msg),
     }
   }
@@ -59,34 +62,47 @@ pub async fn read_mesh(path: &str) -> Result<MeshData, ActionError> {
     let ms3 = parsers::ms3::read(&file).await;
 
     match ms3 {
-      Ok(data) => return_ok!(data),
+      Ok(data) => return_ok!(ReadFileResponse::Mesh(data.into())),
       Err(msg) => return_err!(msg),
     }
   }
-
-  return_err!("Unknow file format")
-}
-
-#[tauri::command]
-pub async fn read_texture(path: &str) -> Result<TextureData, ActionError> {
-  let Some(extension) = Path::new(&path).extension() else {
-    return_err!("Unable to open file");
-  };
-
-  let Ok(file) = File::open(&path) else {
-    return_err!("Unable to open file.");
-  };
 
   if extension == "jit" {
     let jit = parsers::jit::read(&file).await;
     match jit {
-      Ok(data) => return_ok!(data),
+      Ok(data) => return_ok!(ReadFileResponse::Texture(data.into())),
       Err(msg) => return_err!(msg),
     }
   }
 
-  todo!()
-  // Ok(())
+  if extension == "mp3" {
+    let Ok(bytes) = fs::read(path) else {
+      return_err!("Unable to open file");
+    };
+
+    return_ok!(ReadFileResponse::Audio(AudioData {
+      compression: "mp3".to_owned(),
+      buffer: bytes
+    }))
+  }
+
+  if extension == "bin" {
+    let Ok(bytes) = fs::read(path) else {
+      return_err!("Unable to open file");
+    };
+
+    let is_mp3 = parsers::bin::is_mp3(&bytes);
+    if is_mp3 {
+      return_ok!(ReadFileResponse::Audio(AudioData {
+        compression: "mp3".to_owned(),
+        buffer: bytes
+      }));
+    }
+
+    return_ok!(ReadFileResponse::Binary(bytes))
+  }
+
+  return_err!("Unknow file format")
 }
 
 #[tauri::command]

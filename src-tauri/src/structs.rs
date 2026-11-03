@@ -1,6 +1,5 @@
-use std::io::{BufReader, Read};
-
 use serde::{Deserialize, Serialize};
+use std::io::{BufReader, Read};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Vec2<T = f32> {
@@ -62,6 +61,14 @@ impl<R: Read> ByteReader<R> {
     match str::from_utf8(&mut buf) {
       Ok(str) => Ok(str.to_owned()),
       Err(_) => Err("Unable to parse ASCII string from buffer"),
+    }
+  }
+
+  pub fn read_u8(&mut self) -> Result<u8, &'static str> {
+    let mut buf = [0u8; 1];
+    match self.inner.read_exact(&mut buf) {
+      Ok(_) => Ok(buf[0]),
+      Err(_) => Err("Unable to fill buffer"),
     }
   }
 

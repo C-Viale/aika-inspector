@@ -1,9 +1,9 @@
+import { FolderData } from "#actions/files";
+import { Button } from "#components/button";
+import { AppContext } from "#contexts/app-context";
 import { ChangeEvent, useContext, useMemo, useRef, useState } from "react";
 import { BiChevronDown, BiChevronRight } from "react-icons/bi";
 import { FcFile, FcFolder } from "react-icons/fc";
-import { FolderData } from "../../actions/files";
-import { AppContext } from "../../contexts/app-context";
-import { Button } from "../button";
 import "./styles.css";
 
 interface SidebarProps {
@@ -11,7 +11,6 @@ interface SidebarProps {
   selectedFilePath: string;
   onPathSelected(path: string): void;
   onOpenFolderClick(): void;
-  onExportClick(exporterId: string): Promise<void>;
 }
 
 export function Sidebar({
@@ -115,17 +114,13 @@ function FileListFolder({
 
   const filteredFiles = useMemo(() => {
     const filterKey = filter.toLowerCase().trim();
-    return data.files.filter((filename) =>
-      filename.toLowerCase().includes(filterKey),
-    );
+    return data.files.filter((filename) => filename.toLowerCase().includes(filterKey));
   }, [data.files, filter]);
 
   return (
     <li className="filelist-folder">
       <div className="filelist-folder-label" onClick={toggleVisible}>
-        {!disableCollapse && (
-          <>{visible ? <BiChevronDown /> : <BiChevronRight />}</>
-        )}
+        {!disableCollapse && <>{visible ? <BiChevronDown /> : <BiChevronRight />}</>}
         <FcFolder />
         {data.name}
       </div>
@@ -145,9 +140,7 @@ function FileListFolder({
               key={file}
               className="filelist-file"
               onClick={() => onPathSelected(data.path + "/" + file)}
-              data-selected={
-                selectedFilePath === data.path + "/" + file || null
-              }
+              data-selected={selectedFilePath === data.path + "/" + file || null}
             >
               <FcFile />
               {file}

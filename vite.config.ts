@@ -32,11 +32,11 @@ export default defineConfig(() => ({
   },
   resolve: {
     alias: {
-      "#actions": path.resolve(__dirname, "./src/actions"),
-      "#components": path.resolve(__dirname, "./src/components"),
-      "#contexts": path.resolve(__dirname, "./src/contexts"),
-      "#utils": path.resolve(__dirname, "./src/utils"),
-      "#": path.resolve(__dirname, "./src"),
+      "#actions": path.resolve(import.meta.dirname, "./src/actions"),
+      "#components": path.resolve(import.meta.dirname, "./src/components"),
+      "#contexts": path.resolve(import.meta.dirname, "./src/contexts"),
+      "#utils": path.resolve(import.meta.dirname, "./src/utils"),
+      "#": path.resolve(import.meta.dirname, "./src"),
     },
   },
 }));

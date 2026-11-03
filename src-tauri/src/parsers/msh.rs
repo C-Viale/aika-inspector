@@ -1,11 +1,10 @@
-use byteorder::{LittleEndian, ReadBytesExt};
-use std::{fs::File, io::BufReader};
+use std::{fs::File, vec};
 
 use crate::{
-  responses::MeshData,
-  structs::{Vec2, Vec3},
+  responses::{Bone, BoneWeight, MeshData},
+  structs::{ByteReader, Vec2, Vec3},
 };
-
+#[allow(dead_code)]
 pub struct MshData {
   pub magic: i32,
   pub unused_0: i32,
@@ -21,71 +20,127 @@ pub struct MshData {
   pub triangles: Vec<Vec3<i16>>,
   pub normals: Vec<Vec3>,
   pub uv: Vec<Vec2>,
+  pub bones: Vec<MshBone>,
+  pub bone_weights: Vec<MshBoneWeight>,
 }
 
 impl Into<MeshData> for MshData {
   fn into(self) -> MeshData {
+    let mut bones = vec![];
+    for i in self.bones {
+      bones.push(i.into());
+    }
+
+    let mut bone_weights = vec![];
+
+    for i in self.bone_weights {
+      bone_weights.push(i.into())
+    }
+
     MeshData {
       vertices: self.vertices,
       triangles: self.triangles,
       normals: self.normals,
       uv: self.uv,
+      bones,
+      bone_weights,
     }
   }
 }
 
 pub struct MshBone {
-  pub id: i32,
-  pub transform: Vec<f32>,
+  pub id: u32,
+  pub transform: [f32; 16],
+}
+
+impl MshBone {
+  pub fn new_empty() -> Self {
+    Self {
+      id: 0,
+      transform: [0_f32; 16],
+    }
+  }
+}
+
+impl Into<Bone> for MshBone {
+  fn into(self) -> Bone {
+    Bone {
+      id: self.id,
+      transform: self.transform,
+    }
+  }
 }
 
 pub struct MshBoneWeight {
-  pub bone_count: i32,
-  pub bones_ids: [i8; 4],
+  // pub bone_count: i32,
+  pub bones_ids: [u8; 4],
   pub weights: [f32; 4],
 }
 
-pub async fn read(file: &File) -> Result<MshData, std::io::Error> {
-  let mut reader = BufReader::new(file);
-
-  let magic = reader.read_i32::<LittleEndian>()?;
-  let unused_0 = reader.read_i32::<LittleEndian>()?;
-  let chunk_key = reader.read_i32::<LittleEndian>()?;
-  let unknow_0 = reader.read_i32::<LittleEndian>()?;
-  let chunk_size = reader.read_i32::<LittleEndian>()?;
-  let unknow_1 = reader.read_i32::<LittleEndian>()?;
-  let bone_count = reader.read_u32::<LittleEndian>()?;
-  let vertices_count = reader.read_u32::<LittleEndian>()?;
-  let triangles_position_count = reader.read_u32::<LittleEndian>()?;
-
-  for _ in 0..bone_count {
-    for _ in 0..16 {
-      // ignore bones for now
-      reader.read_i32::<LittleEndian>()?;
+impl Into<BoneWeight> for MshBoneWeight {
+  fn into(self) -> BoneWeight {
+    BoneWeight {
+      bones_ids: self.bones_ids,
+      weights: self.weights,
     }
   }
+}
+
+pub async fn read(file: &File) -> Result<MshData, &'static str> {
+  let mut reader = ByteReader::new(file);
+
+  let magic = reader.read_i32_le()?;
+  let unused_0 = reader.read_i32_le()?;
+  let chunk_key = reader.read_i32_le()?;
+  let unknow_0 = reader.read_i32_le()?;
+  let chunk_size = reader.read_i32_le()?;
+  let unknow_1 = reader.read_i32_le()?;
+  let bone_count = reader.read_u32_le()?;
+  let vertices_count = reader.read_u32_le()?;
+  let triangles_position_count = reader.read_u32_le()?;
+
+  let mut bones = Vec::with_capacity(bone_count as usize);
 
   for _ in 0..bone_count {
-    // ignore bones for now
-    reader.read_f32::<LittleEndian>()?;
+    let mut bone = MshBone::new_empty();
+
+    for i in 0..16 {
+      bone.transform[i] = reader.read_f32_le()?;
+    }
+
+    bones.push(bone);
   }
 
-  let mut vertices: Vec<Vec3> = Vec::with_capacity(vertices_count.try_into().unwrap_or_default());
+  for i in 0..bone_count {
+    bones[i as usize].id = reader.read_u32_le()?;
+  }
 
+  let mut vertices: Vec<Vec3> = Vec::with_capacity(vertices_count as usize);
+  let mut normals: Vec<Vec3> = Vec::with_capacity(vertices_count as usize);
+  let mut uv: Vec<Vec2> = Vec::with_capacity(vertices_count as usize);
+  let mut bone_weights: Vec<MshBoneWeight> = Vec::with_capacity(vertices_count as usize);
   let mut bone_count = 0;
+
+  // let mut vertex_weight_joints_count = 0;
 
   for _ in 0..vertices_count {
     let vertex = Vec3 {
-      x: reader.read_f32::<LittleEndian>()?,
-      y: reader.read_f32::<LittleEndian>()?,
-      z: reader.read_f32::<LittleEndian>()?,
+      x: reader.read_f32_le()?,
+      y: reader.read_f32_le()?,
+      z: reader.read_f32_le()?,
+    };
+
+    let mut bone_weight = MshBoneWeight {
+      // bone_count: 0,
+      bones_ids: [0_u8; 4],
+      weights: [0_f32; 4],
     };
 
     vertices.push(vertex);
 
     if chunk_size == 48 {
-      let weight = reader.read_f32::<LittleEndian>()?;
-      // verticesWeights[i].weights[0] = weight;
+      let weight = reader.read_f32_le()?;
+      bone_weight.weights[0] = weight;
 
       if weight > 0.0 {
         bone_count += 1;
@@ -93,9 +148,8 @@ pub async fn read(file: &File) -> Result<MshData, std::io::Error> {
     }
 
     if chunk_size >= 44 {
-      let weight = reader.read_f32::<LittleEndian>()?;
-      // var weight = reader.ReadSingle();
-      // verticesWeights[i].weights[1] = weight;
+      let weight = reader.read_f32_le()?;
+      bone_weight.weights[1] = weight;
 
       if weight > 0.0 {
         bone_count += 1;
@@ -103,46 +157,46 @@ pub async fn read(file: &File) -> Result<MshData, std::io::Error> {
     }
 
     if chunk_size != 36 {
-      let weight = reader.read_f32::<LittleEndian>()?;
-      // var weight = reader.ReadSingle();
-      // verticesWeights[i].weights[2] = weight;
+      let weight = reader.read_f32_le()?;
+      bone_weight.weights[2] = weight;
 
       if weight > 0.0 {
         bone_count += 1;
       }
     }
 
-    for _ in 0..4 {
-      // verticesWeights[i].bonesId[j] = reader.ReadByte();
-      reader.read_u8()?;
+    for j in 0..4 {
+      bone_weight.bones_ids[j] = reader.read_u8()?;
     }
 
-    // if (verticesWeights[i].bonesId[3] > 0)
-    // {
-    //     verticesWeights[i].weights[3] = 1.0f;
-    //     boneCount++;
-    // }
+    if bone_weight.bones_ids[3] > 0 {
+      bone_weight.weights[3] = 1.0;
+      bone_count += 1
+    }
 
-    reader.read_f32::<LittleEndian>()?;
-    reader.read_f32::<LittleEndian>()?;
-    reader.read_f32::<LittleEndian>()?;
-    reader.read_f32::<LittleEndian>()?;
-    reader.read_f32::<LittleEndian>()?;
-    // normals[i] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-    // uvs[i] = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+    // vertex_weight_joints_count += bone_count;
+
+    normals.push(Vec3 {
+      x: reader.read_f32_le()?,
+      y: reader.read_f32_le()?,
+      z: reader.read_f32_le()?,
+    });
+    uv.push(Vec2 {
+      x: reader.read_f32_le()?,
+      y: reader.read_f32_le()? - 1.0,
+    });
+    bone_weights.push(bone_weight);
   }
 
   let triangle_count: usize = (triangles_position_count / 3).try_into().unwrap_or_default();
 
   let mut triangles: Vec<Vec3<i16>> = Vec::with_capacity(triangle_count);
-  let normals: Vec<Vec3> = Vec::with_capacity(triangle_count);
-  let uv: Vec<Vec2> = Vec::with_capacity(triangle_count);
 
   for _ in 0..triangle_count {
     triangles.push(Vec3::<i16> {
-      x: reader.read_i16::<LittleEndian>()?,
-      y: reader.read_i16::<LittleEndian>()?,
-      z: reader.read_i16::<LittleEndian>()?,
+      x: reader.read_i16_le()?,
+      y: reader.read_i16_le()?,
+      z: reader.read_i16_le()?,
     });
   }
 
@@ -160,5 +214,7 @@ pub async fn read(file: &File) -> Result<MshData, std::io::Error> {
     triangles,
     normals,
     uv,
+    bones,
+    bone_weights,
   })
 }

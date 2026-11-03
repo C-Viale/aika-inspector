@@ -11,8 +11,7 @@ pub fn run() {
     .plugin(tauri_plugin_opener::init())
     .invoke_handler(tauri::generate_handler![
       actions::get_folder_structure,
-      actions::read_texture,
-      actions::read_mesh,
+      actions::read_file,
       actions::write_file
     ])
     .run(tauri::generate_context!())
