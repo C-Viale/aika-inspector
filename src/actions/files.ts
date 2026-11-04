@@ -48,6 +48,15 @@ export async function readFile(path: string): Promise<ActionResult<LoadedFile>> 
   }
 }
 
+export async function writeFile(path: string, body: Uint8Array) {
+  try {
+    await invoke<ReadFileResponse>("write_file", { path, body });
+    return ActionResult.ok(true);
+  } catch (error) {
+    return ActionResult.error<LoadedFile>(parseError(error));
+  }
+}
+
 function parseError(err: unknown): string {
   if (!err) return "Undefined error";
   if (typeof err !== "object") return err.toString();

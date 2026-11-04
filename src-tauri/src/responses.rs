@@ -3,6 +3,11 @@ use serde::Serialize;
 use crate::structs::{Vec2, Vec3};
 
 #[derive(Serialize)]
+pub struct ActionError {
+  pub error: String,
+}
+
+#[derive(Serialize)]
 pub struct FolderData {
   pub name: String,
   pub path: String,

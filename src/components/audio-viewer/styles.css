@@ -3,7 +3,44 @@
   width: 100%;
   place-items: center;
 
-  > audio {
-    width: 400px;
+  .export-container {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .audio-player {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    background-color: #cccccc;
+    padding: 1rem;
+    border-radius: 4px;
+  }
+
+  .audio-btn {
+    flex-shrink: 0;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    background-color: white;
+    font-size: 20px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgb(223, 222, 222);
+    }
+  }
+
+  .audio-time {
+  }
+
+  .audio-volume {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
   }
 }

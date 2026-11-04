@@ -74,8 +74,31 @@ export default function App() {
           {loadedFile?.type === "mesh" && (
             <MeshViewer data={loadedFile.data} modelKey={selectedFilePath} />
           )}
-          {loadedFile?.type === "texture" && <TextureViewer data={loadedFile.data} />}
-          {loadedFile?.type === "audio" && <AudioViewer src={loadedFile.data.src} />}
+          {loadedFile?.type === "texture" && (
+            <>
+              <TextureViewer data={loadedFile.data} />
+              <div className="settings-bg-select">
+                <div
+                  className="settings-bg-select-item"
+                  style={{ backgroundColor: "black" }}
+                  onClick={() => setBackgroundColor("black")}
+                ></div>
+                <div
+                  className="settings-bg-select-item"
+                  style={{ backgroundColor: "grey" }}
+                  onClick={() => setBackgroundColor("grey")}
+                ></div>
+                <div
+                  className="settings-bg-select-item"
+                  style={{ backgroundColor: "white" }}
+                  onClick={() => setBackgroundColor("white")}
+                ></div>
+              </div>
+            </>
+          )}
+          {loadedFile?.type === "audio" && (
+            <AudioViewer selectedFilePath={selectedFilePath} src={loadedFile.data.src} />
+          )}
           {error && (
             <div
               style={{
@@ -91,27 +114,6 @@ export default function App() {
               {error}
             </div>
           )}
-
-          <div className="settings-bg-select">
-            <div
-              className="settings-bg-select-item"
-              style={{ backgroundColor: "black" }}
-              onClick={() => {
-                console.log("uai");
-                setBackgroundColor("black");
-              }}
-            ></div>
-            <div
-              className="settings-bg-select-item"
-              style={{ backgroundColor: "grey" }}
-              onClick={() => setBackgroundColor("grey")}
-            ></div>
-            <div
-              className="settings-bg-select-item"
-              style={{ backgroundColor: "white" }}
-              onClick={() => setBackgroundColor("white")}
-            ></div>
-          </div>
         </div>
         {loading && (
           <div className="loading-container">

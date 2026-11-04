@@ -1,14 +1,13 @@
-use crate::{
-  files::list_directory_children,
-  parsers,
-  responses::{AudioData, FolderData, ReadFileResponse},
-};
-use serde::{Deserialize, Serialize};
 use std::{
   fs::{self, File},
   path::Path,
 };
-use tauri::ipc::{InvokeBody, Request};
+
+use crate::{
+  files::list_directory_children,
+  parsers,
+  responses::{ActionError, AudioData, FolderData, ReadFileResponse},
+};
 
 macro_rules! return_err {
   ($msg:expr) => {
@@ -22,11 +21,6 @@ macro_rules! return_ok {
   ($data:expr) => {
     return Ok($data.into())
   };
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct ActionError {
-  pub error: String,
 }
 
 #[tauri::command]
@@ -106,16 +100,6 @@ pub async fn read_file(path: &str) -> Result<ReadFileResponse, ActionError> {
 }
 
 #[tauri::command]
-pub fn write_file(request: Request<'_>) -> Result<(), String> {
-  let InvokeBody::Raw(data) = request.body() else {
-    return Err("expected raw bytes".into());
-  };
-  let header = request
-    .headers()
-    .get("path")
-    .ok_or("missing path header")?
-    .to_str()
-    .map_err(|e| e.to_string())?;
-  let path = urlencoding::decode(header).map_err(|e| e.to_string())?.into_owned();
-  std::fs::write(&path, data).map_err(|e| format!("{path}: {e}"))
+pub fn write_file(path: String, body: Vec<u8>) -> Result<(), String> {
+  std::fs::write(&path, body).map_err(|e| format!("{path}: {e}"))
 }
