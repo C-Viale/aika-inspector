@@ -24,7 +24,8 @@ export type ReadFileResponse =
 
 type ReadTextureData = {
   magic: string;
-  compression_type: string;
+  file_type: string;
+  compression_type: string | null;
   width: number;
   height: number;
   buffer: number[];
@@ -49,7 +50,8 @@ export type MeshData = {
 
 export type TextureData = {
   magic: string;
-  compressionType: string;
+  fileType: string;
+  compressionType: string | null;
   width: number;
   height: number;
   src: string;

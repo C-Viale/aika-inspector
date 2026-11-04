@@ -8,7 +8,8 @@ use crate::{
 
 pub struct JitData {
   pub magic: String,
-  pub compression_type: String,
+  pub file_type: String,
+  pub compression_type: Option<String>,
   pub width: u32,
   pub height: u32,
   pub buffer: Vec<u8>,
@@ -18,6 +19,7 @@ impl Into<TextureData> for JitData {
   fn into(self) -> TextureData {
     TextureData {
       magic: self.magic,
+      file_type: self.file_type,
       compression_type: self.compression_type,
       width: self.width,
       height: self.height,
@@ -27,7 +29,7 @@ impl Into<TextureData> for JitData {
 }
 
 /*
-  ? JIT MEMORY LAYOUT
+  ? -------------------------- JIT --------------------------
   * Header:
   magic       |   ASCII   | 4 bytes | 0x00 - 0x03
   width 			|    u32    | 4 bytes | 0x04 - 0x07
@@ -49,9 +51,36 @@ impl Into<TextureData> for JitData {
   color1	       |  u16  | 2 bytes
   color2	       |  u16  | 2 bytes
   color_indices	 |  u32  | 4 bytes
+  -------------------------------------------------------------
 
-  * JT20 - unknown
-  TODO: find what compression is this
+
+  ? ---------------- JT20 (TGA, uncompressed) -----------------
+  * Header
+  magic                         |   ASCII   | 4 bytes | 0x00 - 0x03
+  id_length                     |    u8     | 1 byte  | 0x04
+  color_map_type                |    u8     | 1 byte  | 0x05
+  image_type                    |    u8     | 1 byte  | 0x06
+  color_map_first_entry_index   |    u16    | 2 bytes | 0x07 - 0x08
+  color_map_length              |    u16    | 2 bytes | 0x09 - 0x10
+  color_map_entry_size          |    u8     | 1 byte  | 0x11
+  x_origin                      |    u16    | 2 bytes | 0x12 - 0x13
+  y_origin                      |    u16    | 2 bytes | 0x14 - 0x15
+  width                         |    u16    | 2 bytes | 0x16 - 0x17
+  height                        |    u16    | 2 bytes | 0x18 - 0x19
+  pixel_depth                   |    u8     | 1 byte  | 0x20
+  image_descriptor              |    u8     | 1 byte  | 0x21
+
+  * Pixel block (pixel_depth = 24)
+  color_chanel_1 (R or B)     |  u8  | 1 byte
+  color_chanel_2 (G)          |  u8  | 1 byte
+  color_chanel_3 (B or R)     |  u8  | 1 byte
+
+  * Pixel block (pixel_depth = 32)
+  color_chanel_1 (R or A)     |  u8  | 1 byte
+  color_chanel_2 (G or B)     |  u8  | 1 byte
+  color_chanel_3 (B or G)     |  u8  | 1 byte
+  color_chanel_4 (A or R)     |  u8  | 1 byte
+
 
 */
 
@@ -59,10 +88,123 @@ pub async fn read(file: &File) -> Result<JitData, String> {
   let mut reader = ByteReader::new(file);
 
   let magic = reader.read_string_exact(4)?;
-  let compression_type = get_compression_type(&magic)?;
+  let (file_type, compression_type) = get_file_meta(&magic)?;
+
+  let (pixel_buffer, width, height) = match file_type {
+    "DirectX" => parse_dxt(compression_type.unwrap(), reader)?,
+    "TGA" => parse_tga(reader)?,
+    _ => panic!(),
+  };
+
+  Ok(JitData {
+    magic,
+    file_type: file_type.to_owned(),
+    compression_type: match compression_type {
+      None => None,
+      Some(str) => Some(str.to_owned()),
+    },
+    width,
+    height,
+    buffer: generate_png(&pixel_buffer, width, height)?,
+  })
+}
+
+fn parse_tga(mut reader: ByteReader<&File>) -> Result<(Vec<RGBA>, u32, u32), String> {
+  let id_length = reader.read_u8()?;
+  let color_map_type = reader.read_u8()?;
+  let image_type = reader.read_u8()?;
+  let color_map_first_entry_index = reader.read_u16_le()?;
+  let color_map_length = reader.read_u16_le()?;
+  let color_map_entry_size = reader.read_u8()?;
+  let x_origin = reader.read_u16_le()?;
+  let y_origin = reader.read_u16_le()?;
+  let width = reader.read_u16_le()?;
+  let height = reader.read_u16_le()?;
+  let pixel_depth = reader.read_u8()?;
+
+  let image_descriptor = reader.read_u8()?;
+
+  let top_to_bottom = (image_descriptor >> 3) & 0x01 == 1;
+  let right_to_left = (image_descriptor >> 4) & 0x01 == 1;
+
+  let width_us = width as usize;
+  let height_us = width_us as usize;
+
+  let mut pixel_buffer: Vec<RGBA> = vec![RGBA::new_empty(); width_us * height_us];
+
+  if top_to_bottom {
+    for row in 0..height_us {
+      if right_to_left {
+        for col in (0..width_us).rev() {
+          let i = (row * width_us) + col;
+
+          if pixel_depth == 32 {
+            pixel_buffer[i].a = reader.read_u8()? as u16;
+          } else {
+            pixel_buffer[i].a = 255
+          }
+
+          pixel_buffer[i].r = reader.read_u8()? as u16;
+          pixel_buffer[i].g = reader.read_u8()? as u16;
+          pixel_buffer[i].b = reader.read_u8()? as u16;
+        }
+      } else {
+        for col in 0..width_us {
+          let i = (row * width_us) + col;
+
+          if pixel_depth == 32 {
+            pixel_buffer[i].a = reader.read_u8()? as u16;
+          } else {
+            pixel_buffer[i].a = 255
+          }
+
+          pixel_buffer[i].r = reader.read_u8()? as u16;
+          pixel_buffer[i].g = reader.read_u8()? as u16;
+          pixel_buffer[i].b = reader.read_u8()? as u16;
+        }
+      }
+    }
+  } else {
+    for row in (0..height_us).rev() {
+      if right_to_left {
+        for col in (0..width_us).rev() {
+          let i = (row * width_us) + col;
+
+          if pixel_depth == 32 {
+            pixel_buffer[i].a = reader.read_u8()? as u16;
+          } else {
+            pixel_buffer[i].a = 255
+          }
+
+          pixel_buffer[i].r = reader.read_u8()? as u16;
+          pixel_buffer[i].g = reader.read_u8()? as u16;
+          pixel_buffer[i].b = reader.read_u8()? as u16;
+        }
+      } else {
+        for col in 0..width_us {
+          let i = (row * width_us) + col;
+
+          if pixel_depth == 32 {
+            pixel_buffer[i].a = reader.read_u8()? as u16;
+          } else {
+            pixel_buffer[i].a = 255
+          }
+
+          pixel_buffer[i].r = reader.read_u8()? as u16;
+          pixel_buffer[i].g = reader.read_u8()? as u16;
+          pixel_buffer[i].b = reader.read_u8()? as u16;
+        }
+      }
+    }
+  }
+
+  Ok((pixel_buffer, width as u32, height as u32))
+}
+
+fn parse_dxt(compression_type: &str, mut reader: ByteReader<&File>) -> Result<(Vec<RGBA>, u32, u32), String> {
   let width = reader.read_u32_le()?;
   let height = reader.read_u32_le()?;
-  let block_size = get_block_size(&magic);
+  let block_size = get_block_size(&compression_type);
   let blocks_x = (width).div_ceil(4);
   let blocks_y = (height).div_ceil(4);
 
@@ -164,30 +306,24 @@ pub async fn read(file: &File) -> Result<JitData, String> {
     }
   }
 
-  Ok(JitData {
-    magic,
-    compression_type: compression_type.to_owned(),
-    width,
-    height,
-    buffer: generate_png(&pixel_buffer, width, height)?,
-  })
+  Ok((pixel_buffer, width, height))
 }
 
-fn get_compression_type(magic: &str) -> Result<&'static str, String> {
+fn get_file_meta(magic: &str) -> Result<(&'static str, Option<&'static str>), String> {
   match magic {
-    "JT31" => Ok("DXT1"),
-    "JT33" => Ok("DXT3"),
-    "JT35" => Ok("DXT5"),
-    "JT20" => Err("Unknown magic JT20".to_owned()),
+    "JT31" => Ok(("DirectX", Some("DXT1"))),
+    "JT33" => Ok(("DirectX", Some("DXT3"))),
+    "JT35" => Ok(("DirectX", Some("DXT5"))),
+    "JT20" => Ok(("TGA", None)),
     _ => Err("Unknown magic".to_owned()),
   }
 }
 
-fn get_block_size(magic: &str) -> u8 {
-  match magic {
-    "JT31" => 8,
-    "JT33" => 16,
-    "JT35" => 16,
+fn get_block_size(compression: &str) -> u8 {
+  match compression {
+    "DXT1" => 8,
+    "DXT3" => 16,
+    "DXT5" => 16,
     _ => unreachable!(),
   }
 }

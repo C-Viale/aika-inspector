@@ -9,7 +9,10 @@ export function FloatingInfo({ data }: FloatingInfoProps) {
     <div className="floating-info">
       {Object.entries(data).map(([key, value]) => (
         <p>
-          {key}: <strong>{value}</strong>
+          <span className="info-key">{key}</span>
+          <span className="info-value" data-none={!value}>
+            {value ?? "-"}
+          </span>
         </p>
       ))}
     </div>

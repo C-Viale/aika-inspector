@@ -34,6 +34,7 @@ export async function readFile(path: string): Promise<ActionResult<LoadedFile>> 
         type: "texture",
         data: {
           magic: data.magic,
+          fileType: data.file_type,
           compressionType: data.compression_type,
           width: data.width,
           height: data.height,

@@ -3,7 +3,7 @@ import { Button } from "#components/button";
 import { ProgressBar } from "#components/progress-bar";
 import { save } from "@tauri-apps/plugin-dialog";
 import { useContext, useEffect, useRef, useState } from "react";
-import { BiVolume, BiVolumeMute } from "react-icons/bi";
+import { BiVolume, BiVolumeFull, BiVolumeLow, BiVolumeMute } from "react-icons/bi";
 import { PiPause, PiPlay } from "react-icons/pi";
 import "./styles.css";
 import { SettingsContext } from "#contexts/settings-context/context";
@@ -148,11 +148,11 @@ export function AudioViewer({ src, selectedFileName }: AudioViewerProps) {
 
         <div className="audio-volume">
           <button className="audio-btn" onClick={toggleMuted}>
-            {muted ? <BiVolumeMute /> : <BiVolume />}
+            {muted ? <BiVolumeMute /> : <>{volume > 0.25 ? <BiVolumeFull /> : <BiVolumeLow />}</>}
           </button>
           <ProgressBar
             min={0}
-            max={1}
+            max={0.5}
             step="0.01"
             value={volume}
             onChange={changeVolume}

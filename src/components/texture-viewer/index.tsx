@@ -105,7 +105,8 @@ export function TextureViewer({ data, selectedFileName }: TextureViewerProps) {
         data={{
           File: selectedFileName,
           Magic: data?.magic,
-          "Compression Type": data?.compressionType,
+          Type: data?.fileType,
+          Compression: data?.compressionType,
           Width: data?.width,
           Height: data?.height,
         }}

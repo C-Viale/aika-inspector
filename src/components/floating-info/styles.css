@@ -5,4 +5,24 @@
   top: 0;
   right: 0;
   padding: 8px;
+
+  > p {
+    display: flex;
+    justify-content: space-between;
+    gap: 5rem;
+
+    .info-key {
+      font-size: 0.7rem;
+      line-height: 1.5rem;
+      font-weight: 700;
+    }
+
+    .info-value {
+      line-height: 1.5rem;
+
+      &[data-none="true"] {
+        color: grey;
+      }
+    }
+  }
 }

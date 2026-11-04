@@ -40,7 +40,8 @@ pub struct BoneWeight {
 #[derive(Serialize)]
 pub struct TextureData {
   pub magic: String,
-  pub compression_type: String,
+  pub file_type: String,
+  pub compression_type: Option<String>,
   pub width: u32,
   pub height: u32,
   pub buffer: Vec<u8>,

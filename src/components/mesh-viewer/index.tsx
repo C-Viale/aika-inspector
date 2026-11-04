@@ -86,8 +86,6 @@ export function MeshViewer({ data, selectedFileName }: MeshViewerProps) {
         data={{
           File: selectedFileName,
           Vertices: data?.vertices.length,
-          Normals: data?.normals.length,
-          UV: data?.uv.length,
           Triangles: data?.triangles.length,
         }}
       />
