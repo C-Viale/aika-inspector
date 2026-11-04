@@ -1,9 +1,10 @@
-import { TextureData } from "#actions/files";
+import { TextureData } from "#/types";
 import { FloatingInfo } from "#components/floating-info";
 import { PointerEvent, useEffect, useRef, useState } from "react";
 import "./styles.css";
 
 interface TextureViewerProps {
+  selectedFileName: string;
   data: TextureData | null;
 }
 
@@ -11,7 +12,7 @@ const MIN_SCALE = 0.5;
 const MAX_SCALE = 8;
 const ZOOM_SPEED = 0.0015;
 
-export function TextureViewer({ data }: TextureViewerProps) {
+export function TextureViewer({ data, selectedFileName }: TextureViewerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef<any>(null);
 
@@ -102,6 +103,7 @@ export function TextureViewer({ data }: TextureViewerProps) {
 
       <FloatingInfo
         data={{
+          File: selectedFileName,
           Magic: data?.magic,
           "Compression Type": data?.compressionType,
           Width: data?.width,

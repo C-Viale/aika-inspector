@@ -1,13 +1,14 @@
 .button {
-  background-color: white;
-  color: black;
+  background-color: var(--bg2);
+  color: var(--color);
   height: 32px;
   padding: 0 1rem;
-  border: 1px solid #767575;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
+  font-family: inherit;
 
   &:hover {
-    background-color: rgb(178, 178, 178);
+    background-color: var(--hover-1);
   }
 
   &:not(:disabled) {

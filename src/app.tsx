@@ -7,6 +7,7 @@ import { AppContext } from "#contexts/app-context";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useState } from "react";
 import { FolderData, LoadedFile } from "./types";
+import { getFileNameFromPath } from "#utils/functions/path";
 
 export default function App() {
   const [backgroundColor, setBackgroundColor] = useState("black");
@@ -31,12 +32,13 @@ export default function App() {
     setSelectedFilePath(path);
     setLoading(true);
     const response = await readFile(path);
+    disposeObjectURL();
 
     if (response.isOk()) {
-      disposeObjectURL();
       setLoadedFile(response.data!);
       setError("");
     } else {
+      setLoadedFile(null);
       setError(response.error!);
     }
 
@@ -61,6 +63,8 @@ export default function App() {
     }
   };
 
+  const selectedFileName = getFileNameFromPath(selectedFilePath, false);
+
   return (
     <AppContext value={{ selectedFilePath, folder, backgroundColor, setBackgroundColor }}>
       <div className="app-layout">
@@ -72,11 +76,11 @@ export default function App() {
         />
         <div className="viewport" style={{ backgroundColor }}>
           {loadedFile?.type === "mesh" && (
-            <MeshViewer data={loadedFile.data} modelKey={selectedFilePath} />
+            <MeshViewer data={loadedFile.data} selectedFileName={selectedFileName} />
           )}
           {loadedFile?.type === "texture" && (
             <>
-              <TextureViewer data={loadedFile.data} />
+              <TextureViewer data={loadedFile.data} selectedFileName={selectedFileName} />
               <div className="settings-bg-select">
                 <div
                   className="settings-bg-select-item"
@@ -97,7 +101,7 @@ export default function App() {
             </>
           )}
           {loadedFile?.type === "audio" && (
-            <AudioViewer selectedFilePath={selectedFilePath} src={loadedFile.data.src} />
+            <AudioViewer selectedFileName={selectedFilePath} src={loadedFile.data.src} />
           )}
           {error && (
             <div

@@ -1,5 +1,5 @@
+import { FolderData } from "#/types";
 import { createContext } from "react";
-import { FolderData } from "#actions/files";
 
 export const AppContext = createContext<Context>({
   backgroundColor: "",

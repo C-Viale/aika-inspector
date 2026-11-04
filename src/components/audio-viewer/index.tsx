@@ -1,15 +1,15 @@
 import { writeFile } from "#actions/files";
 import { Button } from "#components/button";
 import { ProgressBar } from "#components/progress-bar";
-import { getFileNameFromPath } from "#utils/functions/path";
 import { save } from "@tauri-apps/plugin-dialog";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { BiVolume, BiVolumeMute } from "react-icons/bi";
 import { PiPause, PiPlay } from "react-icons/pi";
 import "./styles.css";
+import { SettingsContext } from "#contexts/settings-context/context";
 
 interface AudioViewerProps {
-  selectedFilePath: string;
+  selectedFileName: string;
   src: string;
 }
 
@@ -23,9 +23,9 @@ function formatTime(seconds: number) {
   return `${minutes}:${restSeconds}.${mili.toString()[0]}`;
 }
 
-export function AudioViewer({ src, selectedFilePath }: AudioViewerProps) {
-  const [volume, setVolume] = useState(0.3);
-
+export function AudioViewer({ src, selectedFileName }: AudioViewerProps) {
+  const { autoplayAudio } = useContext(SettingsContext);
+  const [volume, setVolume] = useState(0.5);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [paused, setPaused] = useState(true);
@@ -35,7 +35,7 @@ export function AudioViewer({ src, selectedFilePath }: AudioViewerProps) {
 
   const exportAsMp3 = async () => {
     const path = await save({
-      defaultPath: getFileNameFromPath(selectedFilePath, false),
+      defaultPath: selectedFileName,
       filters: [
         {
           name: "mp3",
@@ -122,7 +122,7 @@ export function AudioViewer({ src, selectedFilePath }: AudioViewerProps) {
 
   return (
     <div className="audio-viewer">
-      <audio ref={ref} src={src} autoPlay hidden />
+      <audio ref={ref} src={src} autoPlay={autoplayAudio} hidden />
 
       <div className="audio-player">
         <button type="button" className="audio-btn" onClick={togglePlayPause}>

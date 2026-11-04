@@ -14,7 +14,8 @@
     display: flex;
     gap: 1rem;
     align-items: center;
-    background-color: #cccccc;
+    background-color: var(--bg);
+    border: 1px solid var(--border-color);
     padding: 1rem;
     border-radius: 4px;
   }
@@ -24,14 +25,16 @@
     height: 40px;
     width: 40px;
     border-radius: 50%;
-    background-color: white;
+    background-color: var(--bg2);
+    border: 1px solid var(--border-color);
+    color: var(--color);
     font-size: 20px;
     display: grid;
     place-items: center;
     cursor: pointer;
 
     &:hover {
-      background-color: rgb(223, 222, 222);
+      background-color: var(--hover-1);
     }
   }
 

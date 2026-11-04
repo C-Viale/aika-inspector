@@ -1,8 +1,8 @@
 .floating-info {
+  background-color: var(--bg);
   position: fixed;
   z-index: 10;
   top: 0;
   right: 0;
-  background-color: #cccccc;
   padding: 8px;
 }

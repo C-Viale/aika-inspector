@@ -1,10 +1,13 @@
-import { FolderData } from "#actions/files";
 import { Button } from "#components/button";
 import { AppContext } from "#contexts/app-context";
 import { ChangeEvent, useContext, useMemo, useRef, useState } from "react";
 import { BiChevronDown, BiChevronRight } from "react-icons/bi";
 import { FcFile, FcFolder } from "react-icons/fc";
 import "./styles.css";
+import { FolderData } from "#/types";
+import { SettingsContext } from "#contexts/settings-context/context";
+import { PiMoon, PiSun } from "react-icons/pi";
+import { MdPlayArrow, MdPlayDisabled } from "react-icons/md";
 
 interface SidebarProps {
   folder: FolderData | null;
@@ -19,8 +22,9 @@ export function Sidebar({
   onOpenFolderClick,
 }: SidebarProps) {
   const { folder } = useContext(AppContext);
-  const [filter, setFilter] = useState("");
+  const { theme, toggleTheme, autoplayAudio, toggleAutoplayAudio } = useContext(SettingsContext);
 
+  const [filter, setFilter] = useState("");
   const filterTimeout = useRef(0);
 
   const onFilterChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -87,6 +91,18 @@ export function Sidebar({
           Export
         </Button>
       </div> */}
+
+      <footer>
+        <div>
+          <Button onClick={toggleTheme} title="Theme">
+            {theme === "light" ? <PiSun size={16} /> : <PiMoon size={16} />}
+          </Button>
+          <Button onClick={toggleAutoplayAudio} title="Autoplay">
+            {autoplayAudio ? <MdPlayArrow size={16} /> : <MdPlayDisabled size={16} />}
+          </Button>
+        </div>
+        <span>0.1.0</span>
+      </footer>
     </div>
   );
 }

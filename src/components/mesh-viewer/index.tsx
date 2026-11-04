@@ -9,8 +9,8 @@ import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
 import * as THREE from "three";
 
 interface MeshViewerProps {
+  selectedFileName: string;
   data: MeshData;
-  modelKey: string;
 }
 
 type ModelExporter = {
@@ -41,7 +41,7 @@ const objExporter: ModelExporter = {
 
 const EXPORTERS: ModelExporter[] = [glbExporter, objExporter];
 
-export function MeshViewer({ data, modelKey }: MeshViewerProps) {
+export function MeshViewer({ data, selectedFileName }: MeshViewerProps) {
   const prev = useRef<THREE.Object3D>(null);
 
   const model: THREE.Object3D | null = useMemo(() => {
@@ -84,6 +84,7 @@ export function MeshViewer({ data, modelKey }: MeshViewerProps) {
     <>
       <FloatingInfo
         data={{
+          File: selectedFileName,
           Vertices: data?.vertices.length,
           Normals: data?.normals.length,
           UV: data?.uv.length,
@@ -93,7 +94,7 @@ export function MeshViewer({ data, modelKey }: MeshViewerProps) {
       <Canvas style={{ height: "100vh" }} camera={{ position: [3, 2, 4], fov: 45 }} dpr={[1, 2]}>
         <hemisphereLight args={["#ffffff", "#8a9299", 1.1]} />
         <directionalLight position={[5, 8, 5]} intensity={1.6} />
-        {model && <Model model={model} modelKey={modelKey} />}
+        {model && <Model model={model} modelKey={selectedFileName} />}
         <OrbitControls makeDefault />
       </Canvas>
     </>

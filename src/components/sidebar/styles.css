@@ -1,10 +1,11 @@
 .sidebar {
+  background-color: var(--bg);
+
   display: flex;
   flex-direction: column;
   min-width: 400px;
   top: 0;
   left: 0;
-  background-color: #cccccc;
   overflow: hidden;
   height: 100vh;
   gap: 0.5rem;
@@ -17,10 +18,11 @@
   }
 
   .filelist {
+    border: 1px solid var(--border-color);
+
     padding: 0.5rem;
     flex-grow: 1;
     height: 100%;
-    border: 1px solid #767575;
     border-radius: 4px;
     overflow: auto;
 
@@ -43,11 +45,22 @@
       white-space: nowrap;
 
       &:hover {
-        background-color: rgb(172, 172, 172);
+        background-color: var(--hover-1);
       }
       &[data-selected="true"] {
-        background-color: rgb(131, 151, 189);
+        background-color: var(--selected);
       }
+    }
+  }
+
+  > footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    > div {
+      display: flex;
+      gap: 0.5rem;
     }
   }
 }
