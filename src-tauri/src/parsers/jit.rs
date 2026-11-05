@@ -193,7 +193,7 @@ fn parse_dxt(compression_type: &str, mut reader: ByteReader<&File>) -> Result<(V
 
 fn get_file_meta(magic: &str) -> Result<(&'static str, Option<&'static str>), String> {
   match magic {
-    "JT31" => Ok(("DirectX", Some("DXT1"))),
+    "JT31" | "JT41" => Ok(("DirectX", Some("DXT1"))),
     "JT33" => Ok(("DirectX", Some("DXT3"))),
     "JT35" => Ok(("DirectX", Some("DXT5"))),
     "JT20" => Ok(("TGA", None)),
