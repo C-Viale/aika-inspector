@@ -49,7 +49,7 @@ fn is_allowed_file(path: &PathBuf) -> bool {
   match path.extension() {
     None => false,
     Some(extension) => match extension.to_str() {
-      Some("msh") | Some("jit") | Some("ms3") | Some("MS3") | Some("mp3") | Some("bin") => true,
+      Some("msh") | Some("jit") | Some("ms3") | Some("MS3") | Some("mp3") | Some("bin") | Some("tga") => true,
       _ => false,
     },
   }

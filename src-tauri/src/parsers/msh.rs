@@ -86,7 +86,7 @@ impl Into<BoneWeight> for MshBoneWeight {
   }
 }
 
-pub async fn read(file: &File) -> Result<MshData, &'static str> {
+pub fn read(file: &File) -> Result<MshData, &'static str> {
   let mut reader = ByteReader::new(file);
 
   let magic = reader.read_i32_le()?;

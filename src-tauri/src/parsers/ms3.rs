@@ -44,7 +44,7 @@ impl Into<MeshData> for Ms3Data {
 }
 
 /*
-  ? MS3 MEMORY LAYOUT
+  ? MS3 byte layout
 
   * Header:
   magic/version 	|    i32   | 4 bytes | 0x00 - 0x03
@@ -84,7 +84,7 @@ impl Into<MeshData> for Ms3Data {
   TODO: map remaining bytes
 */
 
-pub async fn read(file: &File) -> Result<Ms3Data, &'static str> {
+pub fn read(file: &File) -> Result<Ms3Data, &'static str> {
   let mut reader = ByteReader::new(file);
 
   let magic = reader.read_i32_le()?;

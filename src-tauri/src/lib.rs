@@ -1,4 +1,5 @@
 pub(crate) mod actions;
+pub(crate) mod builder;
 pub(crate) mod files;
 pub(crate) mod parsers;
 pub(crate) mod responses;

@@ -44,7 +44,7 @@ pub async fn read_file(path: &str) -> Result<ReadFileResponse, ActionError> {
   };
 
   if extension == "msh" {
-    let msh = parsers::msh::read(&file).await;
+    let msh = parsers::msh::read(&file);
 
     match msh {
       Ok(data) => return_ok!(ReadFileResponse::Mesh(data.into())),
@@ -53,7 +53,7 @@ pub async fn read_file(path: &str) -> Result<ReadFileResponse, ActionError> {
   }
 
   if extension == "ms3" || extension == "MS3" {
-    let ms3 = parsers::ms3::read(&file).await;
+    let ms3 = parsers::ms3::read(&file);
 
     match ms3 {
       Ok(data) => return_ok!(ReadFileResponse::Mesh(data.into())),
@@ -62,7 +62,7 @@ pub async fn read_file(path: &str) -> Result<ReadFileResponse, ActionError> {
   }
 
   if extension == "jit" {
-    let jit = parsers::jit::read(&file).await;
+    let jit = parsers::jit::read(&file);
     match jit {
       Ok(data) => return_ok!(ReadFileResponse::Texture(data.into())),
       Err(msg) => return_err!(msg),
@@ -78,6 +78,14 @@ pub async fn read_file(path: &str) -> Result<ReadFileResponse, ActionError> {
       compression: "mp3".to_owned(),
       buffer: bytes
     }))
+  }
+
+  if extension == "tga" {
+    let tga = parsers::tga::read(&file);
+    match tga {
+      Ok(data) => return_ok!(ReadFileResponse::Texture(data.into())),
+      Err(msg) => return_err!(msg),
+    }
   }
 
   if extension == "bin" {

@@ -68,7 +68,7 @@ impl<R: Read> ByteReader<R> {
     let mut buf = [0u8; 1];
     match self.inner.read_exact(&mut buf) {
       Ok(_) => Ok(buf[0]),
-      Err(_) => Err("Unable to fill buffer"),
+      Err(_) => Err("Unable to fill u8 buffer"),
     }
   }
 
@@ -76,7 +76,7 @@ impl<R: Read> ByteReader<R> {
     let mut buf = [0u8; 2];
     match self.inner.read_exact(&mut buf) {
       Ok(_) => Ok(u16::from_le_bytes(buf)),
-      Err(_) => Err("Unable to fill buffer"),
+      Err(_) => Err("Unable to fill u16 (LE) buffer"),
     }
   }
 
@@ -84,7 +84,7 @@ impl<R: Read> ByteReader<R> {
     let mut buf = [0u8; 2];
     match self.inner.read_exact(&mut buf) {
       Ok(_) => Ok(i16::from_le_bytes(buf)),
-      Err(_) => Err("Unable to fill buffer"),
+      Err(_) => Err("Unable to fill i16 (LE) buffer"),
     }
   }
 
@@ -92,7 +92,7 @@ impl<R: Read> ByteReader<R> {
     let mut buf = [0u8; 4];
     match self.inner.read_exact(&mut buf) {
       Ok(_) => Ok(i32::from_le_bytes(buf)),
-      Err(_) => Err("Unable to fill buffer"),
+      Err(_) => Err("Unable to fill i32 (LE) buffer"),
     }
   }
 
@@ -100,7 +100,7 @@ impl<R: Read> ByteReader<R> {
     let mut buf = [0u8; 4];
     match self.inner.read_exact(&mut buf) {
       Ok(_) => Ok(u32::from_le_bytes(buf)),
-      Err(_) => Err("Unable to fill buffer"),
+      Err(_) => Err("Unable to fill u32 (LE) buffer"),
     }
   }
 
@@ -108,7 +108,7 @@ impl<R: Read> ByteReader<R> {
     let mut buf = [0u8; 8];
     match self.inner.read_exact(&mut buf) {
       Ok(_) => Ok(u64::from_le_bytes(buf)),
-      Err(_) => Err("Unable to fill buffer"),
+      Err(_) => Err("Unable to fill u64 (LE) buffer"),
     }
   }
 
@@ -116,7 +116,7 @@ impl<R: Read> ByteReader<R> {
     let mut buf = [0u8; 4];
     match self.inner.read_exact(&mut buf) {
       Ok(_) => Ok(f32::from_le_bytes(buf)),
-      Err(_) => Err("Unable to fill buffer"),
+      Err(_) => Err("Unable to fill f32 (LE) buffer"),
     }
   }
 }
