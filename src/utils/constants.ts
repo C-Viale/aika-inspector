@@ -10,3 +10,11 @@ export const ALLOWED_FILES: AllowedFiles = {
   mp3: "audio",
   bin: "binary",
 };
+
+export const INITIAL_VOLUME = 0.5;
+
+export const STORAGE_KEYS = {
+  theme: "settings.theme",
+  autoplayAudio: "settings.autoplayaudio",
+  volume: "settings.volume",
+};

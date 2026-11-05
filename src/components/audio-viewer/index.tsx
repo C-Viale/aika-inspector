@@ -3,10 +3,11 @@ import { Button } from "#components/button";
 import { ProgressBar } from "#components/progress-bar";
 import { save } from "@tauri-apps/plugin-dialog";
 import { useContext, useEffect, useRef, useState } from "react";
-import { BiVolume, BiVolumeFull, BiVolumeLow, BiVolumeMute } from "react-icons/bi";
+import { BiVolumeFull, BiVolumeLow, BiVolumeMute } from "react-icons/bi";
 import { PiPause, PiPlay } from "react-icons/pi";
 import "./styles.css";
 import { SettingsContext } from "#contexts/settings-context/context";
+import { INITIAL_VOLUME, STORAGE_KEYS } from "#utils/constants";
 
 interface AudioViewerProps {
   selectedFileName: string;
@@ -23,9 +24,15 @@ function formatTime(seconds: number) {
   return `${minutes}:${restSeconds}.${mili.toString()[0]}`;
 }
 
+const MAX_VOLUME = 0.7;
+
+function normalizeVolume(volume: number) {
+  return volume ** 2.5;
+}
+
 export function AudioViewer({ src, selectedFileName }: AudioViewerProps) {
-  const { autoplayAudio } = useContext(SettingsContext);
-  const [volume, setVolume] = useState(0.5);
+  const { autoplayAudio, volume, setVolume } = useContext(SettingsContext);
+
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [paused, setPaused] = useState(true);
@@ -77,7 +84,7 @@ export function AudioViewer({ src, selectedFileName }: AudioViewerProps) {
     setVolume(newVolume);
     setMuted(false);
     if (ref.current) {
-      ref.current.volume = newVolume ** 2.5;
+      ref.current.volume = normalizeVolume(newVolume);
       ref.current.muted = false;
     }
   };
@@ -92,9 +99,7 @@ export function AudioViewer({ src, selectedFileName }: AudioViewerProps) {
 
     const onLoadMetadata = (e: Event) => {
       const target = e.target as HTMLAudioElement;
-      target.volume = 0.2;
       setPaused(!target.autoplay);
-      setVolume(0.2);
       setDuration(target.duration);
     };
 
@@ -108,8 +113,8 @@ export function AudioViewer({ src, selectedFileName }: AudioViewerProps) {
 
     const controller = new AbortController();
 
-    ref.current.volume = 0.5;
-
+    const initialVolume = +(localStorage.getItem(STORAGE_KEYS.volume) || INITIAL_VOLUME);
+    ref.current.volume = normalizeVolume(initialVolume);
     ref.current.addEventListener("timeupdate", onTimeUpdate, { signal: controller.signal });
     ref.current.addEventListener("loadeddata", onLoadMetadata, { signal: controller.signal });
     ref.current.addEventListener("pause", onPause, { signal: controller.signal });
@@ -152,7 +157,7 @@ export function AudioViewer({ src, selectedFileName }: AudioViewerProps) {
           </button>
           <ProgressBar
             min={0}
-            max={0.5}
+            max={MAX_VOLUME}
             step="0.01"
             value={volume}
             onChange={changeVolume}

@@ -6,6 +6,9 @@ export const SettingsContext = createContext<SettingsContextValue>({
 
   autoplayAudio: false,
   toggleAutoplayAudio: () => null,
+
+  volume: 0.5,
+  setVolume: () => null,
 });
 
 type SettingsContextValue = {
@@ -13,4 +16,6 @@ type SettingsContextValue = {
   toggleTheme(): void;
   autoplayAudio: boolean;
   toggleAutoplayAudio(): void;
+  volume: number;
+  setVolume(value: number): void;
 };
